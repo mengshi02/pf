@@ -1,40 +1,30 @@
-# pf [![Crates.io][crates-badge]][crates-url] [![Build Status][build-badge]][build-url] [![license][license-badge]][license-url]
+# pf
+它是一个对于网络包过滤的全局正则表达式匹配打印命令，它可以用于抓取、搜索和匹配网络包并以日志的方式展示和人性化输出。 pf是一个命令行工具，用户可以通过灵活组合不同的命令参数来分析网络数据包。
 
-[crates-badge]: https://img.shields.io/crates/v/pf.svg
-[crates-url]: https://crates.io/crates/pf
-[build-badge]: https://github.com/mengshi02/pf/actions/workflows/rust.yml/badge.svg
-[build-url]: https://github.com/mengshi02/pf/actions
-[license-badge]: https://img.shields.io/badge/license-Apache2-orange.svg?style=flat
-[license-url]: https://github.com/mengshi02/pf/main/LICENSE
+## 内容列表
+- [安装](#安装)
+- [使用说明](#使用说明)
+- [示例](#示例)
+    - [如何使用](#如何使用) 
+    - [包过滤器](#包过滤器)
+    - [管道](#管道)
+- [如何反馈](#如何反馈)
+- [维护者](#维护者)
 
-[简体中文](https://github.com/mengshi02/pf/blob/main/README_zh.md)
+## 安装
+我们编译好了几个常用的各个平台版本的可执行文件，您只需要下载到本地即可使用。
 
-It is a global regular expression matching print command for network packet filtering, which can be used to capture, search and match network packets and display and humanized output in the form of logs. pf is a command line tool that allows users to analyze network packets by flexibly combining different command parameters.
+linux、mac、windows
 
-## Table of Contents 
-- [Install](#Install)
-- [Usage](#Usage)
-- [Examples](#Examples)
-    - [how to use](#how-to-use)
-    - [packet filter](#packet-filter)
-    - [pipeline](#pipeline)
-- [Feedback](#Feedback)
-- [Maintainers](#Maintainers)
-
-## Install
-We have compiled several commonly used executable files for each platform version, you only need to download them locally to use them.
-
-linux, mac, windows
-
-If you need to compile it yourself, you can do the following:
-Note rustc >= 1.6.0
+如果您需要自行编译，可以进行如下操作：
+注意 rustc >= 1.6.0
 
 ```shell
 # cargo build
 ```
 
-## Usage
-If you use it for the first time, you can use `pf -h` to understand the meaning of each parameter. For more usage methods, please refer to [Example](#Example).
+## 使用说明
+如果您第一次使用可以用 `pf -h` 来了解各个参数的意义。更多使用方法，请查阅[示例](#示例)。
 ```shell
 # pf -h
 pf 0.1.0
@@ -68,14 +58,14 @@ ARGS:
     <FILE>...    Files is read packet stream from pcap format files
 ```
 
-## Examples 
-### How to use 
-1. To capture network packets, use `-d` to specify the network device, for example: 
+## 示例
+### 如何使用
+1. 抓取网络数据包，使用 `-d` 指定网络设备，例如：
 ```shell
 # pf -d en0
 ```
 
-2. What if you don't know which network device to specify? Use `-l` to view network devices status on your computer, the main available network device pf has marked as `green`. 
+2. 不知道应该指定哪个网络设备怎么办？使用 `-l` 查看电脑上的网络设备状态，主要的可用网络设备pf已将其标记为`绿色`。
 ```shell
 # pf -l
 DEVICE        ADDRS                                       MASKS                                                                     BROADCASTS           STATUS                      
@@ -98,7 +88,7 @@ XHC20                                                                           
 VHC128                                                                                                                                                   (empty) 
 ```
 
-3. What does the captured network packet look like after humanized processing? 
+3. 抓取到的网络包经过人性化处理后是什么样子？
 ```shell
 # pf -d en0
 waiting for packet from network device ...
@@ -110,46 +100,46 @@ waiting for packet from network device ...
 2022-09-26 14:40:36.577863 +08:00, 2022-09-26 06:40:36.000528895 +08:00, 2-Layer { dest_mac: 84:65:69:BE:90:01 src_mac: A4:83:E7:E3:53:88 type: Ipv4 }, 3-Layer { dest_ip: 10.21.11.47, src_ip: 172.18.180.63, protocol: TCP, header_checksum: 49038, differentiated_services_code_point: 0, explicit_congestion_notification: 0, payload_len: 1472, identification: 0, dont_fragment: true, more_fragments: false, fragments_offset: 0, time_to_live: 64 }, 4-Layer { dest_port: 80, src_port: 59945, sequence_number: 3987037061, acknowledgment_number: 1452843670, data_offset: 5, ns: false, fin: false, syn: false, rst: false, psh: false, ack: true, urg: false, ece: false, cwr: false, window_size: 4096, checksum: 60563, urgent_pointer: 0 }
 ```
 
-As shown above, use `pf -d en0` to capture the network packets of the en0 device. Without regular expressions, all network packets are captured by default. For the convenience of display, the collected network is separated by 16 `=` equal signs as separators (if you don't like it, you can add `-s` to turn off this function), and the network packets have also been humanized. Adopt a log structure that approximates json.
+如上所示用 `pf -d en0` 抓取en0设备的网络包，没有加正则表达式默认抓取所有网络包。采集到的网络为了方便展示，每个包用16个`=`等号作为分割符隔离开(如果您不喜欢可以加`-s`可关闭此功能），网络包也已经经过人性化处理，采用一种近似json的日志结构。
 
-4. How to look at the network packets of the log structure? What is the meaning of the fields? 
+4. 日志结构的网络包如何看？字段的含义是什么？
 
-5. How to add regular expressions to filter the network packets I need? 
+5. 如何加正则表达式过滤我需要的网络包？
 ```shell
 # pf -d en0 "Ipv4"
-# pf -d en0 -i "ipv4" // -i Arguments can ignore regular expression case 
+# pf -d en0 -i "ipv4" // -i 参数可以忽略正则表达式大小写
 ```
 
-6. How to capture raw network packets into a file? 
+6. 如何抓原始网络包到文件中？
 ```shell
 # pf -d en0 -r
 # pf -d en0 "ipv4" -r -o /tmp/ipv4.pcap
 ```
 
-7. Load network packets from a file for regular matching. 
+7. 从文件中载入网络包进行正则匹配
 ```shell
 # pf /tmp/ipv4.pcap "TCP"
 ```
 
-### Packet Filter
-This filter is different from the regular expression above. The filter rule here is applied before the original packet is crawled. It can be specified with `-M`. For the filter syntax, please refer to [BPF syntax](https://www.ibm. com/docs/en/qsip/7.4?topic=queries-berkeley-packet-filters)
+### 包过滤器
+这个过滤器与上面的正则表达式不同，这里的过滤器规则应用在原始包抓取之前，可用使用 `-M` 指定，过滤器语法请参阅[BPF语法](https://www.ibm.com/docs/en/qsip/7.4?topic=queries-berkeley-packet-filters)
 ```shell
 # pf -d en0 -M port 80 "TCP" 
 ```
 
-### Pipeline
-The pf command can use the cache to allow multiple matching rules to be combined. You can write it as follows:
+### 管道
+pf命令可以利用缓存使得多个匹配规则能够组合使用，您可以如下这样写:
 ```shell
 # pf -d en0 -i "ipv4" | pf "TCP"
 # pf -d en0 -i "ipv4" | pf "TCP" | pf "127.0.0.1"
 ```
 
-## Feedback
+## 如何反馈
 
-Feel free to dive in! [Open an issue](https://github.com/mengshi02/pf/issues/new) or submit PRs.
+非常欢迎你的加入！[提一个 Issue](https://github.com/mengshi02/pf/issues/new) 或者提交一个 Pull Request。
 
-Standard Readme follows the [Contributor Covenant](http://contributor-covenant.org/version/1/3/0/) Code of Conduct.
+标准 Readme 遵循 [Contributor Covenant](http://contributor-covenant.org/version/1/3/0/) 行为规范。
 
 
-## Maintainers
+## 维护者
 [@mengshi02](https://github.com/mengshi02)
