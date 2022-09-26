@@ -1,7 +1,7 @@
 # pf [![Crates.io][crates-badge]][crates-url] [![Build Status][build-badge]][build-url] [![license][license-badge]][license-url]
 
 [crates-badge]: https://img.shields.io/crates/v/pf.svg
-[crates-url]: https://crates.io/crates/pf
+[crates-url]: https://crates.io/crates/pfio
 [build-badge]: https://github.com/mengshi02/pf/actions/workflows/rust.yml/badge.svg
 [build-url]: https://github.com/mengshi02/pf/actions
 [license-badge]: https://img.shields.io/badge/license-Apache2-orange.svg?style=flat
