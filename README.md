@@ -18,6 +18,7 @@ It is a global regular expression matching print command for network packet filt
     - [how to use](#how-to-use)
     - [packet filter](#packet-filter)
     - [pipeline](#pipeline)
+    - [amplifier](#amplifier)
 - [Feedback](#Feedback)
 - [Maintainers](#Maintainers)
 
@@ -54,14 +55,14 @@ FLAGS:
     -v, --verb           Verbose mode (-v, -vv, -vvv, etc.)
 
 OPTIONS:
-    -d, --dev <device>                Opens a capture handle for a device [default: ]
-    -M, --matcher <matcher>           Specify a BPF filter, only match the target package [default: ]
-    -o, --output <output>             Save matched packets in pcap format to pcap file, if there is no matching rule,
-                                      the default is to cap the full package [default: /tmp/0.pcap]
-    -s, --snap-len <snap-len>         Set the snaplen size (the maximum length of a packet captured into the buffer).
-                                      Useful if you only want certain headers, but not the entire packet [default:
-                                      65535]
-    -w, --workers <worker-threads>    Set thread numbers, enhance concurrent processing capabilities [default: 1]
+    -x, --amplify <amplify>      Set the package magnification, by default, the package does not do enlargement
+                                 processing, and it only takes effect when this parameter is greater than 1 [default: 1]
+    -d, --dev <device>           Opens a capture handle for a device [default: ]
+    -M, --matcher <matcher>      Specify a BPF filter, only match the target package [default: ]
+    -o, --output <output>        Save matched packets in pcap format to pcap file, if there is no matching rule, the
+                                 default is to cap the full package [default: /tmp/0.pcap]
+    -s, --snap-len <snap-len>    Set the snaplen size (the maximum length of a packet captured into the buffer). Useful
+                                 if you only want certain headers, but not the entire packet [default: 65535]
 
 ARGS:
     <pattern>    Specify a regular expression for matching data [default: ]
@@ -132,7 +133,8 @@ As shown above, use `pf -d en0` to capture the network packets of the en0 device
 ```
 
 ### Packet Filter
-This filter is different from the regular expression above. The filter rule here is applied before the original packet is crawled. It can be specified with `-M`. For the filter syntax, please refer to [BPF syntax](https://www.ibm. com/docs/en/qsip/7.4?topic=queries-berkeley-packet-filters)
+This filter is different from the regular expression above. The filter rule here is applied before the original packet is crawled. It can be specified with `-M`. For the filter syntax, please refer to
+[BPF syntax](https://www.ibm.com/docs/en/qsip/7.4?topic=queries-berkeley-packet-filters)
 ```shell
 # pf -d en0 -M port 80 "TCP" 
 ```
@@ -143,6 +145,12 @@ The pf command can use the cache to allow multiple matching rules to be combined
 # pf -d en0 -i "ipv4" | pf "TCP"
 # pf -d en0 -i "ipv4" | pf "TCP" | pf "127.0.0.1"
 ```
+
+### Amplifier
+You can amplify the matching target network packets, for example, by 10x:
+```shell
+# pf -d en0 -M dst host 192.168.1.0 -x 10
+````
 
 ## Feedback
 

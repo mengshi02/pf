@@ -110,9 +110,10 @@ pub struct Opt {
     #[structopt(short = "d", long = "dev", default_value = "")]
     device: String,
 
-    /// Set thread numbers, enhance concurrent processing capabilities.
-    #[structopt(short = "w", long = "workers", default_value = "1")]
-    worker_threads: usize,
+    /// Set the package magnification, by default, the package does not do
+    /// enlargement processing, and it only takes effect when this parameter is greater than 1.
+    #[structopt(short = "x", long = "amplify", default_value = "1")]
+    amplify: usize,
 
     /// Save matched packets in pcap format to pcap file, if there is
     /// no matching rule, the default is to cap the full package.
@@ -165,8 +166,8 @@ impl Config {
         self.opt.device.clone()
     }
 
-    pub fn get_worker_threads(&self) -> usize {
-        self.opt.worker_threads
+    pub fn get_amplify(&self) -> usize {
+        self.opt.amplify
     }
 
     pub fn get_files(&self) -> Vec<PathBuf> {
@@ -233,7 +234,7 @@ impl Runner {
             .caseless(c.get_ignore_case())
             .multi_line(c.get_multiline())
             .build(c.get_pattern().as_str()).unwrap();
-        let wt = c.get_worker_threads();
+        let a = c.get_amplify();
         Ok(Runner{
             config: c,
             regex,
@@ -245,7 +246,7 @@ impl Runner {
                 .unwrap(),
             task: Builder::new_multi_thread()
                 .thread_name("task")
-                .worker_threads(wt)
+                .worker_threads(a)
                 .enable_all()
                 .build()
                 .unwrap()
@@ -254,7 +255,11 @@ impl Runner {
 
     pub fn run(&mut self) {
         let (tx, mut rx) = broadcast::channel::<Log>(CHANNEL_CAPACITY);
-        self.task.spawn(print(self.regex.clone(), rx));
+        if self.config.get_amplify() > 1 {
+            self.task.spawn(amplifier(self.dev.clone().unwrap(), rx));
+        } else {
+            self.task.spawn(printer(self.regex.clone(), rx));
+        }
 
         let dev = self.dev.clone();
         let files = self.config.get_files();
@@ -270,7 +275,10 @@ impl Runner {
                     let mut cap = Capture::from_device(dev.unwrap()).unwrap()
                         .promisc(!c.get_promisc())
                         .snaplen(c.get_snap_len())
-                        .open().unwrap();
+                        .open()
+                        .unwrap()
+                        .setnonblock()
+                        .unwrap();
                     if !c.get_matcher().is_empty() {
                         cap.filter(c.get_matcher().as_str(), true).unwrap();
                     }
@@ -291,11 +299,16 @@ impl Runner {
                                 }
                             }
                             Err(e) => {
+                                match e {
+                                    pcap::Error::TimeoutExpired => {
+                                        continue;
+                                    }
+                                    _ => {}
+                                }
                                 println!("cap packet error {:?}", e);
                                 exit(0)
                             }
                         }
-
                     }
                 }
                 Status::Offline => {
@@ -351,7 +364,8 @@ pub struct Log {
     raw: bool,
     time: String,
     cap_time: String,
-    data: String
+    data: String,
+    raw_data: Vec<u8>
 }
 
 impl Default for Log {
@@ -360,7 +374,8 @@ impl Default for Log {
             raw: true,
             time: Default::default(),
             cap_time: Default::default(),
-            data: String::default()
+            data: String::default(),
+            raw_data: vec![]
         }
     }
 }
@@ -373,12 +388,14 @@ impl Log {
             raw,
             time: Default::default(),
             cap_time: Default::default(),
-            data: s
+            data: s,
+            raw_data: vec![]
         }
     }
 
     pub fn from_packet(p: Packet) -> Log {
         let mut log = Log::default();
+        log.raw_data = p.data.to_vec();
         log.time = Local::now().to_string();
         log.cap_time = NaiveDateTime::from_timestamp(p.header.ts.tv_sec, p.header.ts.tv_usec as u32)
             .and_local_timezone(Local)
@@ -452,7 +469,7 @@ struct DataLink(Ethernet2Header);
 
 impl From<DataLink> for String {
     fn from(h: DataLink) -> Self {
-        format!(r#"{{ dest_mac: {} src_mac: {} type: {:?} }}"#,
+        format!(r#"{{ dest_mac: {}, src_mac: {}, type: {:?} }}"#,
                 MacAddr6::from(h.0.destination).to_string(),
                 MacAddr6::from(h.0.source).to_string(),
                 EtherType::from_u16(h.0.ether_type).unwrap())
@@ -514,7 +531,41 @@ impl From<UDPHeader> for String {
     }
 }
 
-async fn print(matcher: Regex, mut rx: Receiver<Log>) {
+async fn amplifier(dev: Device, mut rx: Receiver<Log>) {
+    let mut cap = Capture::from_device(dev).unwrap()
+        .open()
+        .unwrap();
+    while let log = rx.recv().await {
+        match log {
+            Ok(l) => {
+                match cap.sendpacket(l.raw_data) {
+                    Err(e) => {
+                        println!("send packet error {:?}", e);
+                        exit(0)
+                    }
+                    _ => {}
+                };
+            }
+            Err(re) => {
+                match re {
+                    RecvError::Closed => {
+                        println!("recv {:?}", re.to_string());
+                        exit(0)
+                    }
+                    RecvError::Lagged(n) => {
+                        if n > MAX_LAGGED as u64 {
+                            println!("too much message lag({:?}), please increase the number of threads.", n);
+                            exit(0)
+                        }
+                        continue;
+                    }
+                }
+            }
+        };
+    }
+}
+
+async fn printer(matcher: Regex, mut rx: Receiver<Log>) {
     while let log = rx.recv().await {
         match log {
             Ok(l) => {

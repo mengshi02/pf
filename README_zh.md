@@ -8,6 +8,7 @@
     - [如何使用](#如何使用) 
     - [包过滤器](#包过滤器)
     - [管道](#管道)
+    - [放大器](#放大器)
 - [如何反馈](#如何反馈)
 - [维护者](#维护者)
 
@@ -44,14 +45,14 @@ FLAGS:
     -v, --verb           Verbose mode (-v, -vv, -vvv, etc.)
 
 OPTIONS:
-    -d, --dev <device>                Opens a capture handle for a device [default: ]
-    -M, --matcher <matcher>           Specify a BPF filter, only match the target package [default: ]
-    -o, --output <output>             Save matched packets in pcap format to pcap file, if there is no matching rule,
-                                      the default is to cap the full package [default: /tmp/0.pcap]
-    -s, --snap-len <snap-len>         Set the snaplen size (the maximum length of a packet captured into the buffer).
-                                      Useful if you only want certain headers, but not the entire packet [default:
-                                      65535]
-    -w, --workers <worker-threads>    Set thread numbers, enhance concurrent processing capabilities [default: 1]
+    -x, --amplify <amplify>      Set the package magnification, by default, the package does not do enlargement
+                                 processing, and it only takes effect when this parameter is greater than 1 [default: 1]
+    -d, --dev <device>           Opens a capture handle for a device [default: ]
+    -M, --matcher <matcher>      Specify a BPF filter, only match the target package [default: ]
+    -o, --output <output>        Save matched packets in pcap format to pcap file, if there is no matching rule, the
+                                 default is to cap the full package [default: /tmp/0.pcap]
+    -s, --snap-len <snap-len>    Set the snaplen size (the maximum length of a packet captured into the buffer). Useful
+                                 if you only want certain headers, but not the entire packet [default: 65535]
 
 ARGS:
     <pattern>    Specify a regular expression for matching data [default: ]
@@ -122,7 +123,7 @@ waiting for packet from network device ...
 ```
 
 ### 包过滤器
-这个过滤器与上面的正则表达式不同，这里的过滤器规则应用在原始包抓取之前，可用使用 `-M` 指定，过滤器语法请参阅[BPF语法](https://www.ibm.com/docs/en/qsip/7.4?topic=queries-berkeley-packet-filters)
+这个过滤器与上面的正则表达式不同，这里的过滤器规则应用在原始包抓取之前，可用使用 `-M` 指定，过滤器语法请参阅 [BPF语法](https://www.ibm.com/docs/en/qsip/7.4?topic=queries-berkeley-packet-filters)
 ```shell
 # pf -d en0 -M port 80 "TCP" 
 ```
@@ -132,6 +133,12 @@ pf命令可以利用缓存使得多个匹配规则能够组合使用，您可以
 ```shell
 # pf -d en0 -i "ipv4" | pf "TCP"
 # pf -d en0 -i "ipv4" | pf "TCP" | pf "127.0.0.1"
+```
+
+### 放大器
+您可以把匹配的目标网络包做放大处理，例如放大10倍:
+```shell
+# pf -d en0 -M dst host 192.168.1.0 -x 10
 ```
 
 ## 如何反馈
