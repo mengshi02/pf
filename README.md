@@ -35,7 +35,7 @@ Note rustc >= 1.6.0
 ```
 
 ## Usage
-If you use it for the first time, you can use `pf -h` to understand the meaning of each parameter. For more usage methods, please refer to [Example](#Example).
+If you use it for the first time, you can use `pf -h` to understand the meaning of each parameter. For more usage methods, please refer to [Examples](#Examples).
 ```shell
 # pf -h
 pf 0.1.0
