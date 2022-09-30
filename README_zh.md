@@ -15,7 +15,7 @@
 ## 安装
 我们编译好了几个常用的各个平台版本的可执行文件，您只需要下载到本地即可使用。
 
-linux、macOS、windows
+linux | [macOS](https://github.com/mengshi02/pf/blob/main/release/macos/pf) | windows
 
 如果您需要自行编译，可以进行如下操作：
 注意 rustc >= 1.6.0
