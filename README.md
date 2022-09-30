@@ -25,7 +25,7 @@ It is a global regular expression matching print command for network packet filt
 ## Install
 We have compiled several commonly used executable files for each platform version, you only need to download them locally to use them.
 
-linux | [macOS](https://github.com/mengshi02/pf/tree/main/release/macos/pf) | windows
+linux | [macOS](https://github.com/mengshi02/pf/raw/main/release/macos/pf) | windows
 
 If you need to compile it yourself, you can do the following:
 Note rustc >= 1.6.0
