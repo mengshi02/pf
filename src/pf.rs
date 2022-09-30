@@ -147,7 +147,7 @@ impl Config {
 
     pub fn list_device(&self, devs: Vec<Device>) -> Vec<Device> {
         if self.opt.list_device {
-            dev_detail(devs);
+            device_detail(devs);
             exit(0)
         }
         devs
@@ -256,7 +256,7 @@ impl Runner {
     pub fn run(&mut self) {
         let (tx, mut rx) = broadcast::channel::<Log>(CHANNEL_CAPACITY);
         if self.config.get_amplify() > 1 {
-            self.task.spawn(amplifier(self.dev.clone().unwrap(), rx));
+            self.task.spawn(back_device(self.dev.clone().unwrap(), rx));
         } else {
             self.task.spawn(printer(self.regex.clone(), rx));
         }
@@ -531,7 +531,7 @@ impl From<UDPHeader> for String {
     }
 }
 
-async fn amplifier(dev: Device, mut rx: Receiver<Log>) {
+async fn back_device(dev: Device, mut rx: Receiver<Log>) {
     let mut cap = Capture::from_device(dev).unwrap()
         .open()
         .unwrap();
@@ -615,7 +615,7 @@ fn get_status(num: isize) -> Status {
     Status::Pipeline
 }
 
-fn dev_detail(devs: Vec<Device>) {
+fn device_detail(devs: Vec<Device>) {
     println!("{:<13} {:<43} {:<73} {:<20} {:<28}", "DEVICE".bold(), "ADDRS".bold(), "MASKS".bold(), "BROADCASTS".bold(), "STATUS".bold());
     for dev in devs {
         let mut addr = String::new();

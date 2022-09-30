@@ -25,7 +25,7 @@ It is a global regular expression matching print command for network packet filt
 ## Install
 We have compiled several commonly used executable files for each platform version, you only need to download them locally to use them.
 
-linux, mac, windows
+linux, macOS, windows
 
 If you need to compile it yourself, you can do the following:
 Note rustc >= 1.6.0
@@ -113,9 +113,10 @@ waiting for packet from network device ...
 
 As shown above, use `pf -d en0` to capture the network packets of the en0 device. Without regular expressions, all network packets are captured by default. For the convenience of display, the collected network is separated by 16 `=` equal signs as separators (if you don't like it, you can add `-s` to turn off this function), and the network packets have also been humanized. Adopt a log structure that approximates json.
 
-4. How to look at the network packets of the log structure? What is the meaning of the fields? 
+4. How to look at the network packets of the log structure? What is the meaning of the fields?
+As shown above, the first date is when the log was generated, and the second is when the network packet was collected on the device. `2-Layer` is the data link layer data frame header. `3-Layer` is a network layer data packet. According to the link layer type, it indicates that the network layer is the IPv4 protocol. The network layer also includes protocols such as IPv6 and ICMP, and the content is the network header protocol information. `4-Layer` is the transport layer control information. From the header information of the network layer, it can be found that the protocol is TCP, so the transport layer uses the TCP protocol. There are many transport layer protocols, such as UDP, TLS, DCCP, SCTP, RSVP, PPTP, etc.
 
-5. How to add regular expressions to filter the network packets I need? 
+6. How to add regular expressions to filter the network packets I need? 
 ```shell
 # pf -d en0 "Ipv4"
 # pf -d en0 -i "ipv4" // -i Arguments can ignore regular expression case 
